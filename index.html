@@ -1,4 +1,133 @@
+<!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Analyzer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+    }
+    .result a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .loader {
+      display: none;
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stock Analyzer</h1>
+    <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., IRFC)" />
+    <button onclick="analyzeStock()">Analyze</button>
+    <div class="loader" id="loader"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    async function analyzeStock() {
+      const symbol = document.getElementById('stockSymbol').value.trim();
+      const loader = document.getElementById('loader');
+      const resultDiv = document.getElementById('result');
+      if (!symbol) {
+        alert('Please enter a stock symbol.');
+        return;
+      }
+      resultDiv.innerHTML = ''; // Clear previous result
+      loader.style.display = 'block'; // Show loader
+      
+      try {
+        const response = await fetch('https://trading-bot-9z7n.onrender.com/analyze_stock/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ stock_symbol: symbol })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch stock data.');
+
+        const data = await response.json();
+        displayResult(data);
+      } catch (error) {
+        resultDiv.innerHTML = `<p style="color: red;">${error.message}</p>`;
+      } finally {
+        loader.style.display = 'none'; // Hide loader
+      }
+    }
+
+    function displayResult(data) {
+      const resultDiv = document.getElementById('result');
+      const price = data.last_price ? data.last_price[`${data.stock}.NS`] : 'N/A';
+      const recommendation = data.recommendation || 'No data';
+      const entry = data.trade_levels?.entry_price?.[`${data.stock}.NS`] || 'N/A';
+      const target = data.trade_levels?.target_price?.[`${data.stock}.NS`] || 'N/A';
+      const stopLoss = data.trade_levels?.stop_loss?.[`${data.stock}.NS`] || 'N/A';
+      const link = data.investing_url?.url || '#';
+
+      resultDiv.innerHTML = `
+        <h2>${data.stock} Analysis</h2>
+        <p><strong>Last Price:</strong> ₹${price}</p>
+        <p><strong>Recommendation:</strong> ${recommendation}</p>
+        <h3>Trade Levels</h3>
+        <p><strong>Entry Price:</strong> ₹${entry}</p>
+        <p><strong>Target Price:</strong> ₹${target}</p>
+        <p><strong>Stop Loss:</strong> ₹${stopLoss}</p>
+        <p><a href="${link}" target="_blank">More Info on Investing.com</a></p>
+      `;
+    }
+  </script>
+</body>
+</html>
+
+
+
+<!-- <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,3 +231,4 @@
   </script>
 </body>
 </html>
+ -->
